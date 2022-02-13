@@ -1,0 +1,6 @@
+[submodule "Obj_detection_for_mobile_robot"]
+	path = ObjectTracking
+	url = https://github.com/hiimmuc/Obj_detection_for_mobile_robot.git
+[submodule "mobileRobott"]
+	path = Communication
+	url = https://github.com/trungmanufc/mobileRobott

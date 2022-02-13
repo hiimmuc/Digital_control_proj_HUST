@@ -1,0 +1,6 @@
+./MecanumRobot
+MecanumRobot/*
+Docs/*
+venv
+*/.venv
+*/venv
