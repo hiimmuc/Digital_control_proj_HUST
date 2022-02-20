@@ -86,7 +86,7 @@ function [volt] = controller(w, q, xRef(k), yRef(k), dxRef(k), dyRef(k), ddxRef(
     % Calculate OUTPUT voltage for 4 motors
     dqRef = [u(1)*cos(q(3)); u(1)*sin(q(3)); u(2)] ; %body velocity output
     vRef = (J*dqRef); % motor velocity    
-    wRef = vRef./(2*pi*r_w); %setpoint wheel rpm
+    wRef = vRef.*60./(2*pi*r_w); %setpoint wheel rpm
     % PID controller (NEW)
     e = wRef - w;
     volt = Kp.*e + Ki.*e(1).*Ts + Kd.*(e(1)-e_last(1))./Ts; %OUTPUT voltage 
