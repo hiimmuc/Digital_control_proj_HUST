@@ -50,6 +50,11 @@ A = [0 1; 0 0];
 B = [0; 1];
 C = [1 0];
 K = place(A, B, desPoles); %pole placement
+%PID parameter
+Kp = [1;1;1;1];
+Ki = [10;10;10;10];
+Kd = [0;0;0;0];
+
 k = 1; %trajectory index 
 %controller function
 function [volt] = controller(w, q, xRef(k), yRef(k), dxRef(k), dyRef(k), ddxRef(k), ddyRef(k))
