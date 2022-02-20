@@ -50,21 +50,24 @@ A = [0 1; 0 0];
 B = [0; 1];
 C = [1 0];
 K = place(A, B, desPoles); %pole placement
+k = 1; %trajectory index 
+%controller function
+function [volt] = controller(w, q, xRef(k), yRef(k), dxRef(k), dyRef(k), ddxRef(k), ddyRef(k))
+    %update current state (NEW)
+    dq = J_plus*w; %current body velocity 
+    z1 = [q(1); dq(1)]; 
+    z2 = [q(2); dq(2)];
 
-
-k = 1; %trajectory index (NEW)
-%control looping
-while 1 %(NEW)
-    %reference state
+    %reference state grouping
     zRef1 = [xRef(k); dxRef(k)];
     zRef2 = [yRef(k); dyRef(k)];
-    
+
     %error and control
     ez1 = zRef1 - z1; %z1: INPUT x position and x speed
     ez2 = zRef2- z2; %z2: INPUT y position and y speed
     uu = [ddxRef(k); ddyRef(k)] + [K*ez1; K*ez2];
     D = norm([z1(1)-zRef1(1) z2(1)-zRef2(1)]);
-    
+
     %Compute reference robot velocity
     F = [cos(q(3)), -v*sin(q(3)); sin(q(3)), v*cos(q(3))];
     vv = F\uu; %translational acceleration and angular velocity
@@ -74,7 +77,7 @@ while 1 %(NEW)
     %constraint
     if abs(u(2))>wMax, u(2) = wMax*sign(u(2)); end %rotation speed constraint
     if abs(v)>vMax, v = vMax*sign(v); end %long speed constraint
-    
+
     % Calculate OUTPUT voltage for 4 motors
     dqRef = [u(1)*cos(q(3)); u(1)*sin(q(3)); u(2)] ; %body velocity output
     vRef = (J*dqRef); % motor velocity    
@@ -83,16 +86,4 @@ while 1 %(NEW)
     e = wRef - w;
     volt = Kp.*e + Ki.*e(1).*Ts + Kd.*(e(1)-e_last(1))./Ts; %OUTPUT voltage 
     e_last = e;
-    
-    %update current state (NEW)
-    dq = J_plus*w; %current body velocity 
-    z1 = [q(1); dq(1)]; 
-    z2 = [q(2); dq(2)];
-    
-    %advance to next reference point (NEW)
-    k = k + 1; 
-    %end of reference point list, stop running (NEW)
-    if k > length(t)
-        break
-    end
 end
