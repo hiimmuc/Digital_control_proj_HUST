@@ -2,26 +2,9 @@
 %% Simulation edit section
 Ts = 1/20; %sampling frequency 20Hz
 
-T_cycle = 35; % time taken to traverse 1 cycle of sine trajectory (second) (NEW)
-t = 0:Ts:T_cycle; % point step of trajectory (NEW)
-l = 0.0765 ; % length robot center to wheel center
-d = 0.0695; % width robot center to middle of wheel
-r_w = 0.024; %radius of wheel
-
-wMax = 0.2582; %maximum body angular velocity
-vMax = 0.377;  %maximum body velocity
-
-
-%state feedback controller
-desPoles = [-1-0.5i; -1+0.5i]; % pole placement
-%desPoles = [1+0.5i; 1-0.5i];
-%%
-
-%kinematic transformation matrix
-J = [1 -1 -(l+d); 1 1 -(l+d); 1 -1 l+d; 1 1 l+d]; %(body to motors)
-J_plus = inv((J')*J)*(J'); %pseudo-inverse kinematic, motors to body
-
 %reference trajectory x(t), y(t)(sine)
+T_cycle = 35; % time taken to traverse 1 cycle of sine trajectory (second)
+t = 0:Ts:T_cycle; % point step of trajectory 
 freq = 2*pi/T_cycle; %(NEW)
 xRef = freq*t;
 yRef = sin(freq*t);
@@ -40,24 +23,32 @@ v = sqrt(z1(2)^2+z2(2)^2); % body velocity
 dq = [dxRef(1); dyRef(1); atan2(dyRef(1), dxRef(1))]; %inital body velocity
 w = J*dq; %initial INPUT wheel velocity (FROM ENCODER) (NEW)
 
-%motor  init (for PID calculation) (NEW)
-e = zeros([1 4]); %wheel speed error 
-e_last = zeros([1 4]); %last wheel speed error
-volt = zeros([1 4]); %OUTPUT voltage to motor
-
-%matrix of linearisation
-A = [0 1; 0 0];
-B = [0; 1];
-C = [1 0];
-K = place(A, B, desPoles); %pole placement
-%PID parameter
-Kp = [1;1;1;1];
-Ki = [10;10;10;10];
-Kd = [0;0;0;0];
-
-k = 1; %trajectory index 
 %controller function
 function [volt] = controller(w, q, xRef(k), yRef(k), dxRef(k), dyRef(k), ddxRef(k), ddyRef(k))
+    %control parameter:
+    l = 0.0765 ; % length robot center to wheel center
+    d = 0.0695; % width robot center to middle of wheel
+    r_w = 0.024; %radius of wheel
+    
+    %kinematic transformation matrix
+    J = [1 -1 -(l+d); 1 1 -(l+d); 1 -1 l+d; 1 1 l+d]; %(body to motors)
+    J_plus = inv((J')*J)*(J'); %pseudo-inverse kinematic, motors to body
+
+    wMax = 0.2582; %maximum body angular velocity
+    vMax = 0.377;  %maximum body velocity
+
+    %state feedback controller
+    desPoles = [-1-0.5i; -1+0.5i]; % pole placement
+    %matrix of linearisation
+    A = [0 1; 0 0];
+    B = [0; 1];
+    C = [1 0];
+    K = place(A, B, desPoles); %pole placement
+    %PID parameter
+    Kp = [1;1;1;1];
+    Ki = [10;10;10;10];
+    Kd = [0;0;0;0];
+    
     %update current state (NEW)
     dq = J_plus*w; %current body velocity 
     z1 = [q(1); dq(1)]; 
@@ -89,6 +80,6 @@ function [volt] = controller(w, q, xRef(k), yRef(k), dxRef(k), dyRef(k), ddxRef(
     wRef = vRef.*60./(2*pi*r_w); %setpoint wheel rpm
     % PID controller (NEW)
     e = wRef - w;
-    volt = Kp.*e + Ki.*e(1).*Ts + Kd.*(e(1)-e_last(1))./Ts; %OUTPUT voltage 
+    volt = Kp.*e + Ki.*e.*Ts + Kd.*(e-e_last)./Ts; %OUTPUT voltage 
     e_last = e;
 end
